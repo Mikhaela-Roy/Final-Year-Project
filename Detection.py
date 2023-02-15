@@ -1,90 +1,107 @@
 import cv2
 import numpy as np
 
-#---Accessing the phone camera---#
-#video = cv2.VideoCapture('https://192.168.0.79:8080/video')
-video = cv2.VideoCapture(0)
+#---Reference---#
+#---https://karooza.net/blob-detection-and-tracking---#
+#---https://learnopencv.com/blob-detection-using-opencv-python-c/---#
 
+
+#---Accessing the phone camera---#
+video = cv2.VideoCapture('https://10.240.7.61:8080/video')
+#video = cv2.VideoCapture(0) 
+
+#---Defining the parameters for a specific blob detection---#
 def parameters():
+    
     #Initialising parameters
     params = cv2.SimpleBlobDetector_Params()
 
-    # Change thresholds
+    #Change thresholds
     params.minThreshold = 120;
     params.maxThreshold = 255;
      
-    # Filter by Circularity
+    #Filter by Circularity
     params.filterByCircularity = False
     params.minCircularity = 0.1
-
+    circle = params.minCircularity
+    
     #Filter by Area
     params.filterByArea = True
     params.minArea = 400
+    mini = params.minArea
     params.maxArea = 80000
+    maxi = params.maxArea
 
     #Create the parameters
     detector = cv2.SimpleBlobDetector_create(params)
 
     return detector
 
+#---Function to detect the desired colours of the object---#
 def colours(frame):
-    #Colour Threshold 
+    
+    #Colour Threshold for Yellow
     y_min = (20,120,120)
     y_max = (49,255,255)
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
+    #Colour Threshold for Red
     r_min = (170,50,50)
     r_max = (180,255,255)
     rhsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-    
-    mask = cv2.inRange(hsv,y_min,y_max)
-    r_mask = cv2.inRange(hsv, r_min, r_max)
 
-    final = mask + r_mask
+    #Colour Threshold for Pink
+    p_min = (156, 74, 76)
+    p_max = (166, 255, 255)
+    phsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    y_mask = cv2.inRange(hsv, y_min,y_max)
+    r_mask = cv2.inRange(rhsv, r_min, r_max)
+    p_mask = cv2.inRange(phsv, p_min, p_max)
+
+    final = y_mask + r_mask + p_mask
 
     return final
 
+#---Detecting the centre of a circular object using contours---#
 def centre(frame):
-    
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray,(5,5), cv2.BORDER_DEFAULT)
-    ret, thresh = cv2.threshold(blur, 200,255, cv2.THRESH_BINARY_INV)
-    contours,hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    blank = np.zeros(thresh.shape[:2], dtype = 'uint8')
-    cv2.drawContours(blank, contours, -1,(255,0,0),1)
-    for i in contours:
-        M = cv2.moments(i)
-        if M['m00'] != 0:
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
-            cv2.drawContours(frame, [i], -1, (0, 255, 0), 2)
-            cv2.circle(frame, (cx, cy), 7, (0, 0, 255), -1)
-            cv2.putText(frame, "center", (cx - 20, cy - 20),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-        print(f"x: {cx} y: {cy}")
-        
+
+    bilateral_filter = cv2.bilateralFilter(frame, 5, 175, 175)
+    edge_filter = cv2.Canny(bilateral_filter, 75, 200)
+    _,contours = cv2.findContours(edge_filter, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    detector = parameters()
+
+    contour_list = []
+    for contour in contours:
+        approx = cv2.approxPolyDP(contour, 0.01*cv2.arcLength(contour, True),True)
+        area = cv2.contourArea(contour)
+        if ((len(approx) > 8) and (area > 400)):
+            contour_list.appen(contour)
+            
+    cv2.drawContours(frame, contour_list, -1, (255,0,255),2)
+    cv2.imshow('Circular Detection', frame)
+            
+    return detector
+
 while True:
-    #Initialising video stream
+    #---Capturing the video frame-by-frame---#
     check, frame = video.read()
-
-    detector =  parameters()
+    #---Calling the function to run whilst passing through a parameter---#
     final = colours(frame)
-    #centre(frame)
-    
-    #To highlight the blobs detected
+    detector = centre(frame)
+    #---To highlight the blobs detected
     reverse = 255 - final
-
+    #---
     keypoints = detector.detect(reverse)
     count = len(keypoints)
     text = "Count: " + str(count)
     
     vid_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     cv2.putText(vid_keypoints, text, (5,25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
-    
-    #cv2.imshow("Camera Feed", frame)
+
     cv2.imshow("Keypoints", vid_keypoints)
-
-
+    
     cv2.waitKey(0)
     
 video.release()
