@@ -5,10 +5,10 @@ import numpy as np
 #---https://karooza.net/blob-detection-and-tracking---#
 #---https://learnopencv.com/blob-detection-using-opencv-python-c/---#
 
-
-#---Accessing the phone camera---#
-video = cv2.VideoCapture('https://10.240.7.61:8080/video')
-#video = cv2.VideoCapture(0) 
+#---Accessing the phone camera using an IP address from app---#
+#video = cv2.VideoCapture('https://10.240.7.61:8080/video')
+video = cv2.VideoCapture(0)
+#video = cv2.VideoCapture('https://192.) 
 
 #---Defining the parameters for a specific blob detection---#
 def parameters():
@@ -28,9 +28,7 @@ def parameters():
     #Filter by Area
     params.filterByArea = True
     params.minArea = 400
-    mini = params.minArea
     params.maxArea = 80000
-    maxi = params.maxArea
 
     #Create the parameters
     detector = cv2.SimpleBlobDetector_create(params)
@@ -66,12 +64,14 @@ def colours(frame):
 #---Detecting the centre of a circular object using contours---#
 def centre(frame):
 
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (17,17),0)
     bilateral_filter = cv2.bilateralFilter(frame, 5, 175, 175)
     edge_filter = cv2.Canny(bilateral_filter, 75, 200)
     _,contours = cv2.findContours(edge_filter, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     detector = parameters()
-
+    '''
     contour_list = []
     for contour in contours:
         approx = cv2.approxPolyDP(contour, 0.01*cv2.arcLength(contour, True),True)
@@ -81,15 +81,15 @@ def centre(frame):
             
     cv2.drawContours(frame, contour_list, -1, (255,0,255),2)
     cv2.imshow('Circular Detection', frame)
-            
+    '''
     return detector
-
+    
 while True:
     #---Capturing the video frame-by-frame---#
     check, frame = video.read()
     #---Calling the function to run whilst passing through a parameter---#
     final = colours(frame)
-    detector = centre(frame)
+    detector = parameters()
     #---To highlight the blobs detected
     reverse = 255 - final
     #---
@@ -97,12 +97,13 @@ while True:
     count = len(keypoints)
     text = "Count: " + str(count)
     
-    vid_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.putText(vid_keypoints, text, (5,25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
-
-    cv2.imshow("Keypoints", vid_keypoints)
+    video_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    cv2.putText(video_keypoints, text, (5,25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
     
-    cv2.waitKey(0)
+    cv2.imshow("Keypoints", video_keypoints)
+    
+    key = cv2.waitKey(1)
+
     
 video.release()
 cv2.destroyAllWindows()
