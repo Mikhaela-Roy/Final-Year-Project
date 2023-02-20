@@ -6,9 +6,12 @@ import numpy as np
 #---https://learnopencv.com/blob-detection-using-opencv-python-c/---#
 
 #---Accessing the phone camera using an IP address from app---#
+#---IP address for Wi-Fi connection at university---#
 #video = cv2.VideoCapture('https://10.240.7.61:8080/video')
+#---IP address for Wi-Fi connection at home---#
+#video = cv2.VideoCapture('https://192.168.0.79:8080/video')
+#---Using the laptop's camera stream---#
 video = cv2.VideoCapture(0)
-#video = cv2.VideoCapture('https://192.) 
 
 #---Defining the parameters for a specific blob detection---#
 def parameters():
@@ -23,12 +26,10 @@ def parameters():
     #Filter by Circularity
     params.filterByCircularity = False
     params.minCircularity = 0.1
-    circle = params.minCircularity
     
     #Filter by Area
     params.filterByArea = True
     params.minArea = 400
-    params.maxArea = 80000
 
     #Create the parameters
     detector = cv2.SimpleBlobDetector_create(params)
@@ -63,26 +64,27 @@ def colours(frame):
 
 #---Detecting the centre of a circular object using contours---#
 def centre(frame):
+    #---Used for contouring to find the centre point of the circular object---#
+    ret, thresh = cv2.threshold(frame, 127, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (17,17),0)
-    bilateral_filter = cv2.bilateralFilter(frame, 5, 175, 175)
-    edge_filter = cv2.Canny(bilateral_filter, 75, 200)
-    _,contours = cv2.findContours(edge_filter, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnt = contours[0]
 
-    detector = parameters()
-    '''
-    contour_list = []
-    for contour in contours:
-        approx = cv2.approxPolyDP(contour, 0.01*cv2.arcLength(contour, True),True)
-        area = cv2.contourArea(contour)
-        if ((len(approx) > 8) and (area > 400)):
-            contour_list.appen(contour)
-            
-    cv2.drawContours(frame, contour_list, -1, (255,0,255),2)
-    cv2.imshow('Circular Detection', frame)
-    '''
-    return detector
+    cv2.drawContours(frame, contours, -1,(0,255,0),-1)
+    
+    M =  cv2.moments(cnts)
+
+    cx = int(M['m10']/M['m00'])
+    cy = int(M['m01']/M['m00'])
+
+    (cx,cy), radius = cv2.minEnclosingCircle(cnt)
+    center  = (int(x), int(y))
+    radius = int(radius)
+    
+    cv2.circle(frame, center, radius, (0,0,255),2)
+    cv2.putText(frame, 'Center', (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255))
+    
+    cv2.imshow('Centroid', frame)
     
 while True:
     #---Capturing the video frame-by-frame---#
@@ -93,17 +95,34 @@ while True:
     #---To highlight the blobs detected
     reverse = 255 - final
     #---
+    centre(frame)
     keypoints = detector.detect(reverse)
+    #---Find length---#
     count = len(keypoints)
     text = "Count: " + str(count)
-    
+    #---Draw the boundary circle of the detetced blob---#
     video_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     cv2.putText(video_keypoints, text, (5,25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+    #---When a circular ball is detected, find the contour---#
+    if count > 0:
+        #---Finding the size of the object and display---#
+        size = keypoints[0].size
+        text = "S = " + "{:.2f}".format(size)
+        cv2.putText(frame, text, (0,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1)
+        #---Find the contour of the specified object---#
+        contour_list = []
+        for contour in contours:
+            approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
+            area = cv2.contourArea(contour)
+            if ((len(approx) > 8) & (area > 30) ):
+                contour_list.append(contour)
+        
+        cv2.drawContours(frame, contour_list, -1, (0,255,0),2)
+        
+    cv2.imshow("Camera Feed", frame)
     
-    cv2.imshow("Keypoints", video_keypoints)
-    
-    key = cv2.waitKey(1)
-
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
     
 video.release()
 cv2.destroyAllWindows()
