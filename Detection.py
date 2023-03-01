@@ -12,9 +12,9 @@ import numpy as np
 #---IP address for Wi-Fi connection at university---#
 #video = cv2.VideoCapture('https://10.240.7.61:8080/video')
 #---IP address for Wi-Fi connection at home---#
-video = cv2.VideoCapture('https://192.168.0.79:8080/video')
+#video = cv2.VideoCapture('https://192.168.0.79:8080/video')
 #---Using the laptop's camera stream---#
-#video = cv2.VideoCapture(0)
+video = cv2.VideoCapture(0)
 
 #---Function to detect the desired colours of the object---#
 def colours(frame):
@@ -46,6 +46,10 @@ def colours(frame):
 
     final = w_mask + y_mask
 
+    return final
+
+def contours(frame):
+
     #Create a 5x5 8 bit integer matrix
     kernel = np.ones((7,7), np.uint8)
     #Removes unncessary black noises from the white region
@@ -59,7 +63,7 @@ def colours(frame):
     #Draws all the contour points 
     output = cv2.drawContours(frame, contours, -1, (0,0,255), 3)
 
-    return final, contours
+    return contours
 
 #---Detecting the centre of a circular object using contours---#
 def centre(frame):
@@ -83,8 +87,8 @@ def centre(frame):
     
     cv2.circle(frame, center, radius, (0,0,255), 2)
     #cv2.putText(frame, 'center', center, cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-    #cv2.putText(frame, 'radius', (5,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-    #cv2.drawContours(frame, contours, -1,(0,255,0),-1)
+    cv2.putText(frame, 'radius', (5,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    cv2.drawContours(frame, contours, -1,(0,255,0),-1)
 
 while True:
     #---Capturing the video frame-by-frame---#
