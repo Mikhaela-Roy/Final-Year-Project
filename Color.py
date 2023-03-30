@@ -8,12 +8,12 @@ import sys
 import argparse
 from collections import deque
 from imutils.video import VideoStream
-from pyfirmata import Arduino, util
 
 #Reference
 #https://pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
 
 video = cv2.VideoCapture(0)
+arduino = serial.Serial('COM3', 9600)
 
 def arguments():
     ap = argparse.ArgumentParser()
@@ -53,7 +53,8 @@ def  colour_contouring(frame, pts):
         area = cv2.contourArea(cnt)
         
         c = max(contours, key = cv2.contourArea)
-        ((x,y), radius) = cv2.minEnclosingCircle(c)
+        x, y = cv2.minEnclosingCircle(c)
+        radius = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
         center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
 
@@ -64,18 +65,19 @@ def  colour_contouring(frame, pts):
             cv2.circle(frame, center, 5, (0,0,255), -1)
                 
         pts.appendleft(center)
-        
-def bluetooth():
-    
-    board = Arduino('COM4') # Change to your port
 
+    return x,y
 
 while True:
     ret, frame = video.read()
     pts = arguments()
     colour_contouring(frame, pts)
-    #bluetooth()
 
+    data = []
+    
+    cmd = cmd + '\r'
+    arduino.write(cmd.encode())
+    
     cv2.imshow('Camera', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'): break
 
