@@ -13,7 +13,7 @@ from imutils.video import VideoStream
 #https://pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
 
 video = cv2.VideoCapture(0)
-arduino = serial.Serial('COM3', 9600)
+#arduino = serial.Serial('COM4', 9600)
 
 def arguments():
     ap = argparse.ArgumentParser()
@@ -27,6 +27,8 @@ def arguments():
 def  colour_contouring(frame, pts):
 
     blur = cv2.GaussianBlur(frame, (11,11), 0)
+    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+    thresh = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)[1]
     
     y_min = (23,50,20)
     y_max = (50,255,255)
@@ -53,8 +55,7 @@ def  colour_contouring(frame, pts):
         area = cv2.contourArea(cnt)
         
         c = max(contours, key = cv2.contourArea)
-        x, y = cv2.minEnclosingCircle(c)
-        radius = cv2.minEnclosingCircle(c)
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
         center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
 
@@ -63,20 +64,22 @@ def  colour_contouring(frame, pts):
             text = "X: " + str(int(x)) + " Y: " + str(int(y))
             cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             cv2.circle(frame, center, 5, (0,0,255), -1)
+            count = np.sum(np.where(thresh == final))
+            print('count = ', count)
+           
                 
         pts.appendleft(center)
-
-    return x,y
 
 while True:
     ret, frame = video.read()
     pts = arguments()
     colour_contouring(frame, pts)
 
-    data = []
-    
-    cmd = cmd + '\r'
-    arduino.write(cmd.encode())
+##    data = []
+##    
+##    cmd = (x, y)
+##    cmd = cmd + '\r'
+##    arduino.write(cmd.encode())
     
     cv2.imshow('Camera', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'): break
