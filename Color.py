@@ -28,15 +28,15 @@ def  colour_contouring(frame, pts):
 
     blur = cv2.GaussianBlur(frame, (11,11), 0)
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    thresh = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(frame, 175, 255, cv2.THRESH_BINARY)[1]
     
     y_min = (23,50,20)
     y_max = (50,255,255)
-    hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     g_min = (29, 86, 6)
     g_max = (64, 255, 255)
-    g_hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
+    g_hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     y_mask = cv2.inRange(hsv, y_min,y_max)
     g_mask = cv2.inRange(g_hsv, g_min, g_max)
@@ -56,6 +56,15 @@ def  colour_contouring(frame, pts):
         
         c = max(contours, key = cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
+        x, y = (x,y)
+
+        if x > 350:
+            print('left')
+        elif x < 350:
+            print('right')
+        elif x == 350:
+            print('centre')
+        
         M = cv2.moments(c)
         center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
 
@@ -65,7 +74,7 @@ def  colour_contouring(frame, pts):
             cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             cv2.circle(frame, center, 5, (0,0,255), -1)
             count = np.sum(np.where(thresh == final))
-            print('count = ', count)
+            #print('count = ', count)
            
                 
         pts.appendleft(center)

@@ -1,6 +1,6 @@
 import serial
 
-arduino = serial.Serial('COM6', 115200)
+arduino = serial.Serial('COM6', 9600)
 
 data = []
 

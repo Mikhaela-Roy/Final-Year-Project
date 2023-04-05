@@ -4,7 +4,7 @@ String myCmd;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  HC05.begin(9600);
 }
 
 void loop() {
@@ -14,14 +14,13 @@ void loop() {
   }
   myCmd = HC05.readStringUntil('\r');
   
-  if(myCmd == "ON"){
+  if(myCmd == "LEFT"){
     digitalWrite(4, HIGH);
     Serial.print("Data recieved");
     
   }
-  if(myCmd == "OFF"){
+  if(myCmd == "RIGHT"){
     digitalWrite(4, LOW);
-    Serial.print("Data recieved");
-   
+    Serial.print("Data recieved");       
   }
 }
