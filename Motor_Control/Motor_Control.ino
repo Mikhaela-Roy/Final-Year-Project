@@ -1,5 +1,5 @@
 #include <SoftwareSerial.h>
-SoftwareSerial HC05(11,12);
+SoftwareSerial HC05(11,12); //Bluetooth connection
 
 #define ENCA1 2 //Motor A Encoders
 #define ENCA2 7 // Motor A Encoders
@@ -12,50 +12,65 @@ SoftwareSerial HC05(11,12);
 #define BIN1 6 //Forwards Motor B
  
 int pos = 0;
+int pwm;
+int pwmVal;
 String myCmd;
 
 void setup() {
   HC05.begin(9600);
-  pinMode(ENCA1,INPUT);
-  pinMode(ENCA2,INPUT);
-  pinMode(ENCB1,INPUT); 
-  pinMode(ENCB2,INPUT);
-  attachInterrupt(digitalPinToInterrupt(ENCA1),readEncoder,RISING);
-  attachInterrupt(digitalPinToInterrupt(ENCB1),readEncoder,RISING);
-  attachInterrupt(digitalPinToInterrupt(ENCA2),readEncoder,RISING);
-  attachInterrupt(digitalPinToInterrupt(ENCB2),readEncoder,RISING);
+
+  Serial.println("Enter command: ");
 }
  
 void loop() {
-  
-  setMotor("RIGHT", 25, PWM, AIN2, BIN1); 
-}
- 
-void setMotor(String myCmd, int pwmVal, int pwm, int in1, int in2){
-    
-    analogWrite(pwm,pwmVal);
+  if(HC05.available()){
+    myCmd = HC05.readStringUntil('\r');
+    Serial.println("You typed: ");
+    Serial.println(myCmd);
+  }
+  //   //setMotor(myCmd, 25, PWM, AIN2, BIN1);
+  //   if(myCmd.equals("straight")){ //STRAIGHT
+  //         digitalWrite(AIN2, HIGH);
+  //         digitalWrite(BIN1, HIGH);
+  //     }
+  //   else if(myCmd.equals("right")){ //LEFT
+  //       digitalWrite(AIN2, HIGH);
+  //       digitalWrite(BIN1, LOW);
+  //     }
+  //   else if(myCmd.equals("left")){ //RIGHT
+  //       digitalWrite(AIN2, LOW);
+  //       digitalWrite(BIN1, HIGH);   
+  //     } 
+  // }
 
-    if(myCmd == "STRAIGHT"){ //STRAIGHT
-      digitalWrite(in1, HIGH);
-      digitalWrite(in2, HIGH);
-    }
-    if(myCmd == "RIGHT"){ //LEFT
-      digitalWrite(in1, HIGH);
-      digitalWrite(in2, LOW);
-    }
-    if(myCmd == "LEFT"){ //RIGHT
-      digitalWrite(in1, LOW);
-      digitalWrite(in2, HIGH);
-    }  
-  
 }
+
+// void readEncoder(){
+//   int b = digitalRead(ENCB1);
+//   if(b > 0){
+//     pos++;
+//   }
+//   else{
+//     pos--;
+//   }
+// }
  
-void readEncoder(){
-  int b = digitalRead(ENCB1);
-  if(b > 0){
-    pos++;
-  }
-  else{
-    pos--;
-  }
-}
+// void setMotor(String myCmd, int pwmVal, int pwm, int in1, int in2){
+    
+//     analogWrite(pwm,pwmVal);
+
+//     if(myCmd.equals("straight")){ //STRAIGHT
+//       digitalWrite(in1, HIGH);
+//       digitalWrite(in2, HIGH);
+//     }
+//     if(myCmd.equals("right")){ //LEFT
+//       digitalWrite(in1, HIGH);
+//       digitalWrite(in2, LOW);
+//     }
+//     if(myCmd.equals("left")){ //RIGHT
+//       digitalWrite(in1, LOW);
+//       digitalWrite(in2, HIGH);
+//     }  
+  
+// }
+ 

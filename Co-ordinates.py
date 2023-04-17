@@ -60,10 +60,13 @@ def  colour_contouring(frame, pts):
 
         if x > 350:
             print('left')
+            cmd = "left"
         elif x < 350:
             print('right')
-        elif x == 350:
+            cmd = "right"
+        elif x > 350 or < 350:
             print('centre')
+            cmd = "centre"
         
         M = cv2.moments(c)
         center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
