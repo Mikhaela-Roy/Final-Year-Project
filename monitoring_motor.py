@@ -10,4 +10,3 @@ while True:
     cmd = cmd + '\r'
     arduino.write(cmd.encode())
 
-arduino.close()

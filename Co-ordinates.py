@@ -13,7 +13,7 @@ from imutils.video import VideoStream
 #https://pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
 
 video = cv2.VideoCapture(0)
-#arduino = serial.Serial('COM4', 9600)
+arduino = serial.Serial('COM4', 9600)
 
 def arguments():
     ap = argparse.ArgumentParser()
@@ -57,16 +57,28 @@ def  colour_contouring(frame, pts):
         c = max(contours, key = cv2.contourArea)
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         x, y = (x,y)
-
-        if x > 350:
+        
+        #Checks the x value on the frame and sends a command yo arduino to control motors. 
+        if x > 360:
             print('left')
             cmd = "left"
-        elif x < 350:
+            #time.sleep(0.1)
+            #arduino.write(cmd.encode()) 
+        elif x < 340:
             print('right')
             cmd = "right"
-        elif x > 350 or < 350:
+            #time.sleep(0.1)
+            #arduino.write(cmd.encode())
+        elif x  >= 350 or x <= 360:
             print('centre')
-            cmd = "centre"
+            cmd = "straight"
+            #time.sleep(0.1)
+            
+        time.sleep(0.1)
+        cmd = cmd +'\r'
+        arduino.write(cmd.encode())
+            
+        
         
         M = cv2.moments(c)
         center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
@@ -76,7 +88,7 @@ def  colour_contouring(frame, pts):
             text = "X: " + str(int(x)) + " Y: " + str(int(y))
             cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             cv2.circle(frame, center, 5, (0,0,255), -1)
-            count = np.sum(np.where(thresh == final))
+            #count = np.sum(np.where(thresh == final))
             #print('count = ', count)
            
                 
@@ -87,11 +99,7 @@ while True:
     pts = arguments()
     colour_contouring(frame, pts)
 
-##    data = []
-##    
-##    cmd = (x, y)
-##    cmd = cmd + '\r'
-##    arduino.write(cmd.encode())
+    
     
     cv2.imshow('Camera', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'): break
