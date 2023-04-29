@@ -8,11 +8,15 @@ SoftwareSerial mySerial(11,12);
 
 String cmd;
 
+//NEED TO ADD SPEED OF THE MOTORS
+
 void setup(){
   mySerial.begin(9600);
   Serial.begin(9600);
   //HC05.println("Bluetooth Ready");
   //bluetooth.print("Enter command: ");
+  digitalWrite(5, LOW);
+  digitalWrite(6, LOW);
 }
 
 void loop(){
@@ -40,7 +44,7 @@ void setMotor(String cmd){
       digitalWrite(6, HIGH);
       Serial.println("Recieved: Right");
     }
-    else if(cmd == "stop"){
+    else{
       digitalWrite(5, LOW);
       digitalWrite(6, LOW);
       Serial.println("Recieved: Stop");

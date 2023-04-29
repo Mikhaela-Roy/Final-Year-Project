@@ -11,13 +11,13 @@ while True:
     if not check: break
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (17,17), 0)
+    gray= cv2.medianBlur(gray, 5)
 
-    circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, 1.2, 100,
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100,
                                param1 = 100, param2 = 30, minRadius = 75, maxRadius = 400)
 
     if circles is None:
-        circles = np.uint16(np.round(circles))
+        circles = np.uint16(np.around(circles))
         chosen = None
         for i in circles[0, :]:
             if chosen is None: chosen = i
